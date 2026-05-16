@@ -4,6 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
+## IMPORTANT: Always Consult Docs First
+
+**Before writing any code**, check the `.docs/` directory for relevant documentation. This directory contains project-specific guides, decisions, and references that take precedence over general knowledge. Find the most relevant file(s) for the task at hand and read them before proceeding.
+
+- /docs/ui.md
+
 ## Commands
 
 ```bash
