@@ -1,89 +1,11 @@
-"use client";
-
-import { useState } from "react";
-import { format } from "date-fns";
-import { CalendarIcon, CheckCircle2, Circle, Flame } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parseISO } from "date-fns";
+import { CheckCircle2, Circle, Flame } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "./DatePicker";
+import { getHabitsForDate, type HabitForDate } from "@/data/habits";
 
-type HabitType = "binary" | "measurable";
-
-interface HabitLog {
-  id: string;
-  habitName: string;
-  type: HabitType;
-  categoryName: string;
-  categoryColor: string;
-  completed: boolean;
-  value?: number;
-  targetValue?: number;
-  targetUnit?: string;
-  currentStreak: number;
-  notes?: string;
-}
-
-const PLACEHOLDER_LOGS: HabitLog[] = [
-  {
-    id: "1",
-    habitName: "Morning Run",
-    type: "measurable",
-    categoryName: "Fitness",
-    categoryColor: "#4ADE80",
-    completed: true,
-    value: 5,
-    targetValue: 5,
-    targetUnit: "km",
-    currentStreak: 7,
-  },
-  {
-    id: "2",
-    habitName: "Read",
-    type: "measurable",
-    categoryName: "Learning",
-    categoryColor: "#60A5FA",
-    completed: false,
-    value: 15,
-    targetValue: 30,
-    targetUnit: "min",
-    currentStreak: 3,
-  },
-  {
-    id: "3",
-    habitName: "Meditate",
-    type: "binary",
-    categoryName: "Mindfulness",
-    categoryColor: "#C084FC",
-    completed: true,
-    currentStreak: 12,
-    notes: "10-minute body scan",
-  },
-  {
-    id: "4",
-    habitName: "Drink Water",
-    type: "measurable",
-    categoryName: "Health",
-    categoryColor: "#FB923C",
-    completed: false,
-    value: 4,
-    targetValue: 8,
-    targetUnit: "glasses",
-    currentStreak: 0,
-  },
-  {
-    id: "5",
-    habitName: "No Social Media",
-    type: "binary",
-    categoryName: "Focus",
-    categoryColor: "#F87171",
-    completed: false,
-    currentStreak: 1,
-  },
-];
-
-function HabitLogItem({ log }: { log: HabitLog }) {
+function HabitLogItem({ log }: { log: HabitForDate }) {
   return (
     <Card className="transition-colors hover:bg-muted/40">
       <CardContent className="flex items-center gap-4 py-4">
@@ -102,16 +24,18 @@ function HabitLogItem({ log }: { log: HabitLog }) {
             >
               {log.habitName}
             </span>
-            <Badge
-              variant="secondary"
-              className="text-xs shrink-0"
-              style={{ borderLeft: `3px solid ${log.categoryColor}` }}
-            >
-              {log.categoryName}
-            </Badge>
+            {log.categoryName && (
+              <Badge
+                variant="secondary"
+                className="text-xs shrink-0"
+                style={{ borderLeft: `3px solid ${log.categoryColor ?? "#888"}` }}
+              >
+                {log.categoryName}
+              </Badge>
+            )}
           </div>
 
-          {log.type === "measurable" && log.targetValue !== undefined && (
+          {log.type === "measurable" && log.targetValue !== null && (
             <p className="text-sm text-muted-foreground mt-0.5">
               {log.value ?? 0} / {log.targetValue} {log.targetUnit}
             </p>
@@ -133,38 +57,24 @@ function HabitLogItem({ log }: { log: HabitLog }) {
   );
 }
 
-export default function DashboardPage() {
-  const [date, setDate] = useState<Date>(new Date());
-  const [open, setOpen] = useState(false);
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
+  const { date: dateParam } = await searchParams;
+  const date = dateParam ? parseISO(dateParam) : new Date();
+  const dateStr = format(date, "yyyy-MM-dd");
 
-  const completed = PLACEHOLDER_LOGS.filter((l) => l.completed).length;
-  const total = PLACEHOLDER_LOGS.length;
+  const logs = await getHabitsForDate(dateStr);
+  const completed = logs.filter((l) => l.completed).length;
+  const total = logs.length;
 
   return (
-    <main className="flex-1 p-6 max-w-2xl mx-auto w-full">
+    <main className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <CalendarIcon className="size-4" />
-              {format(date, "MMMM d, yyyy")}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => {
-                if (d) {
-                  setDate(d);
-                  setOpen(false);
-                }
-              }}
-            />
-          </PopoverContent>
-        </Popover>
+        <DatePicker selected={date} />
       </div>
 
       <Card className="mb-6">
@@ -188,8 +98,8 @@ export default function DashboardPage() {
       </Card>
 
       <div className="space-y-2">
-        {PLACEHOLDER_LOGS.length > 0 ? (
-          PLACEHOLDER_LOGS.map((log) => <HabitLogItem key={log.id} log={log} />)
+        {logs.length > 0 ? (
+          logs.map((log) => <HabitLogItem key={log.id} log={log} />)
         ) : (
           <p className="text-center text-muted-foreground py-12">
             No habits logged for this date.
