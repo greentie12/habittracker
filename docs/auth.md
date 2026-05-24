@@ -64,7 +64,9 @@ All foreign keys in other tables reference `users.id`, never `users.clerkId`.
 
 ## Protected Routes
 
-Protect routes by calling `getInternalUserId()` (or `auth()`) at the top of the server component or data helper — it redirects or throws before any data is read. Do not use middleware-based route protection unless there is an explicit reason to do so.
+All `/dashboard` routes are protected via Next.js middleware — see `routing.md` for the middleware setup. Do not add `redirect()` calls in page components for auth; middleware handles that.
+
+Data helpers in `/data` must still call `getInternalUserId()` to enforce per-user data isolation. Middleware protects the route; data helpers scope the query.
 
 ## What is Not Allowed
 
