@@ -117,6 +117,24 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Calendar day status dots */
+.day-status-complete::after,
+.day-status-missed::after,
+.day-status-future::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.day-status-complete::after { background-color: #3b82f6; }
+.day-status-missed::after   { background-color: #ef4444; }
+.day-status-future::after   { background-color: #22c55e; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
